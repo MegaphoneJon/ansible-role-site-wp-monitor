@@ -1,0 +1,43 @@
+---
+- block:
+  # FIXME: Check if it's enabled first.
+  - name: Enable Megaphone monitoring
+    command: "cv en com.megaphonetech.monitoring"
+    args:
+      chdir: "{{ webroot }}"
+    become_user: "{{ run_as_user }}"
+
+  - name: Check if monitor role exists
+    command: "wp role exists monitor"
+    args:
+      chdir: "{{ webroot }}"
+    register: monitor_role_exists
+    become_user: "{{ run_as_user }}"
+    changed_when: false
+    failed_when: not(monitor_role_exists.rc == 0 or monitor_role_exists.stderr is search("does not exist"))
+
+  - name: Create a role for monitoring
+    command: "wp role create monitor Monitor"
+    args:
+      chdir: "{{ webroot }}"
+    register: create_monitoring_role
+    become_user: "{{ run_as_user }}"
+    changed_when: create_monitoring_role.rc == 0
+    failed_when: not(create_monitoring_role.rc) == 0
+    when: not(monitor_role_exists.rc == 0)
+
+  - name: Add remote monitoring permission to monitor role
+    command: "wp --path={{ webroot }} cap add monitor remote_monitoring"
+    become_user: "{{ run_as_user }}"
+    register: cap_added
+    changed_when: cap_added.stdout is search("added 1 capabilit")
+
+  # We don't actually record the password because we don't care what it is.
+  - name: Create a user for monitoring
+    command: "wp --path={{ webroot }} user create {{ monitoring_user }} {{ monitoring_email }} --user_pass='{{ lookup('password', '/dev/null length=32') }}' --role=monitor"
+    register: create_monitoring_user
+    become_user: "{{ run_as_user }}"
+    changed_when: create_monitoring_user.rc == 0
+    failed_when: not(create_monitoring_user.rc == 0 or create_monitoring_user.stderr is search("username is already registered"))
+
+  when: cms == 'WordPress'
