@@ -1,4 +1,12 @@
 ---
+# WordPress Nagios monitoring
+- name: Install the Icinga2 wp-version.php
+  copy:
+    src: files/wp-version.php
+    dest: "{{ webroot }}/wp-version.php"
+  become_user: "{{ run_as_user }}"
+
+# WordPress Civi monitoring
 - block:
   # FIXME: Check if it's enabled first.
   - name: Enable Megaphone monitoring
@@ -40,4 +48,4 @@
     changed_when: create_monitoring_user.rc == 0
     failed_when: not(create_monitoring_user.rc == 0 or create_monitoring_user.stderr is search("username is already registered"))
 
-  when: cms == 'WordPress'
+  when: cms == 'WordPress' and site.contract_type is search("Civi Maintenance") and site.civicrm == 'Yes'
