@@ -8,7 +8,6 @@
 
 # WordPress Civi monitoring
 - block:
-  # FIXME: Check if it's enabled first.
   - name: Enable Megaphone monitoring
     command: "cv en com.megaphonetech.monitoring"
     args:
@@ -48,4 +47,11 @@
     changed_when: create_monitoring_user.rc == 0
     failed_when: not(create_monitoring_user.rc == 0 or create_monitoring_user.stderr is search("username is already registered"))
 
-  when: cms == 'WordPress' and site.contract_type is search("Civi Maintenance") and site.civicrm == 'Yes'
+  - name: Create a CiviCRM contact for the admin user
+    shell: echo '{"contact_type":"Individual", "display_name":"{{ monitoring_email }}","api_key":"'{{ lookup('passwordstore', client + '/' + hostname + '/' + bare_url + '/apikey create=true length=32') }}'","email":"{{ monitoring_email }}","options":{"match":"email"}}' | cv api contact.create --in=json
+    args:
+      chdir: "{{ webroot }}"
+    become_user: "{{ run_as_user }}"
+    when: civicrm == 'Yes'
+
+  when: cms == 'WordPress' and contract_type is search("Civi Maintenance") and civicrm == 'Yes'
