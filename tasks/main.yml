@@ -5,6 +5,7 @@
     src: files/wp-version.php
     dest: "{{ webroot }}/wp-version.php"
   become_user: "{{ run_as_user }}"
+  when: cms == 'WordPress' and contract_type is search("WordPress Maintenance")
 
 # WordPress Civi monitoring
 - block:
