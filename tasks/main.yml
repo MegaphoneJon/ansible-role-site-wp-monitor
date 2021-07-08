@@ -10,7 +10,7 @@
 # WordPress Civi monitoring
 - block:
   - name: Enable Megaphone monitoring
-    command: "cv en com.megaphonetech.monitoring"
+    shell: "PATH=$HOME/bin:$PATH;cv en com.megaphonetech.monitoring"
     args:
       chdir: "{{ webroot }}"
     become_user: "{{ run_as_user }}"
@@ -49,7 +49,7 @@
     failed_when: not(create_monitoring_user.rc == 0 or create_monitoring_user.stderr is search("username is already registered"))
 
   - name: Create a CiviCRM contact for the admin user
-    shell: echo '{"contact_type":"Individual", "display_name":"{{ monitoring_email }}","api_key":"'{{ lookup('passwordstore', client + '/' + hostname + '/' + bare_url + '/civicrm_api_key create=true length=32') }}'","email":"{{ monitoring_email }}","options":{"match":"email"}}' | cv api contact.create --in=json
+    shell: PATH=$HOME/bin:$PATH;echo '{"contact_type":"Individual", "display_name":"{{ monitoring_email }}","api_key":"'{{ lookup('passwordstore', client + '/' + hostname + '/' + bare_url + '/civicrm_api_key create=true length=32') }}'","email":"{{ monitoring_email }}","options":{"match":"email"}}' | cv api contact.create --in=json
     args:
       chdir: "{{ webroot }}"
     become_user: "{{ run_as_user }}"
