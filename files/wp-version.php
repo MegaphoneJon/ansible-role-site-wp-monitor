@@ -87,4 +87,4 @@ foreach ($core->updates as $core_update)
 	}
 }
 
-echo $status . '#' . implode($text, '; ');
+echo $status . '#' . implode('; ', $text);
