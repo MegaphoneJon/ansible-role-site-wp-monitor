@@ -53,6 +53,18 @@
     args:
       chdir: "{{ webroot }}"
     become_user: "{{ run_as_user }}"
-    when: civicrm == 'Yes'
 
+  - name: Disable checks that we only want to see in the 'CiviCRM infrequent' checks
+    shell: PATH=$HOME/bin:$PATH;echo '{"values":{"domain_id":"current_domain","name":"{{ item }}","is_active":false}}' | cv api4 StatusPreference.create --in=json
+    args:
+      chdir: "{{ webroot }}"
+    become_user: "{{ run_as_user }}"
+    with_items:
+      - checkDirsWritable
+      - checkUploadsAreNotAccessible
+      - checkDirectoriesAreNotBrowseable
+      - checkLogFileIsNotAccessible
+      - checkCleanurls
+    tags: be-quiet-civicrm
+    
   when: cms == 'WordPress' and contract_type is search("Civi Maintenance") and civicrm == 'Yes'
